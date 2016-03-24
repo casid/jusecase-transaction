@@ -18,7 +18,6 @@ import static org.mockito.Mockito.*;
 public class SimpleTransactionRunnerTest {
     private SimpleTransactionRunner transactionRunner;
 
-    private ThreadLocalTransactionManager transactionManager = new ThreadLocalTransactionManager();
     private DataSource dataSource;
     private Connection connection;
 
@@ -30,8 +29,8 @@ public class SimpleTransactionRunnerTest {
         connection = mock(Connection.class);
         when(dataSource.getConnection()).thenReturn(connection);
 
-        transactionRunner = new SimpleTransactionRunner(transactionManager);
-        transactionRunner.setTransactionFactory(new DataSourceTransactionFactory(dataSource, transactionManager));
+        transactionRunner = new SimpleTransactionRunner(new ThreadLocalTransactionManager());
+        transactionRunner.setTransactionFactory(new DataSourceTransactionFactory(dataSource, transactionRunner.getTransactionManager()));
     }
 
     @Test
@@ -102,6 +101,20 @@ public class SimpleTransactionRunnerTest {
         assertEquals(3, lockedTransaction.getAttempts());
     }
 
+    @Test(expected = TransactionError.class)
+    public void nestedTransactionsAreNotSupported() {
+        transactionRunner.runAsTransaction(new Runnable() {
+            @Override
+            public void run() {
+                transactionRunner.runAsTransaction(new Runnable() {
+                    @Override
+                    public void run() {
+                    }
+                });
+            }
+        });
+    }
+
     private void whenTransactionIsExecuted() {
         whenTransactionIsExecuted(new Runnable() {
             @Override
@@ -121,7 +134,7 @@ public class SimpleTransactionRunnerTest {
     private void thenTransactionFailsWithErrorMessage(String expected) {
         assertTrue(error instanceof TransactionError);
         assertEquals(expected, error.getMessage());
-        assertNull(transactionManager.getCurrent());
+        assertNull(transactionRunner.getTransactionManager().getCurrent());
     }
 
     private void thenTransactionInitializationFails() {
