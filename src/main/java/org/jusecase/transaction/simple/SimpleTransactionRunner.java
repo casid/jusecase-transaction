@@ -1,5 +1,6 @@
 package org.jusecase.transaction.simple;
 
+import org.jusecase.transaction.Transaction;
 import org.jusecase.transaction.TransactionError;
 import org.jusecase.transaction.TransactionRunner;
 
@@ -38,6 +39,17 @@ public class SimpleTransactionRunner implements TransactionRunner {
         runAsTransaction(task, maxTransactionAttempts - 1);
     }
 
+    @Override
+    public Transaction startTransaction() {
+        if (transactionManager.getCurrent() != null) {
+            throw new TransactionError("Nested transactions are not supported!");
+        }
+
+        Transaction transaction = transactionFactory.createTransaction();
+        transactionManager.setCurrent(transaction);
+        return transaction;
+    }
+
     private void runAsTransaction(Runnable task, int attemptsLeft) {
         Transaction transaction = startTransaction();
         try {
@@ -56,15 +68,5 @@ public class SimpleTransactionRunner implements TransactionRunner {
 
     private boolean shouldRetryTransaction(RuntimeException error) {
         return (error instanceof TransactionExecutionError) && ((TransactionExecutionError) error).shouldRetryTransaction();
-    }
-
-    private Transaction startTransaction() {
-        if (transactionManager.getCurrent() != null) {
-            throw new TransactionError("Nested transactions are not supported!");
-        }
-
-        Transaction transaction = transactionFactory.createTransaction();
-        transactionManager.setCurrent(transaction);
-        return transaction;
     }
 }

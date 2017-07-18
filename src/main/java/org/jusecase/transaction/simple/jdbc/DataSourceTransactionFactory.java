@@ -1,6 +1,6 @@
 package org.jusecase.transaction.simple.jdbc;
 
-import org.jusecase.transaction.simple.Transaction;
+import org.jusecase.transaction.Transaction;
 import org.jusecase.transaction.simple.TransactionFactory;
 import org.jusecase.transaction.simple.TransactionManager;
 

@@ -1,5 +1,7 @@
 package org.jusecase.transaction.simple;
 
+import org.jusecase.transaction.Transaction;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
