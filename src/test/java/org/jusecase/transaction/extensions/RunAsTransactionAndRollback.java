@@ -1,6 +1,9 @@
 package org.jusecase.transaction.extensions;
 
-import org.junit.jupiter.api.extension.*;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 import org.jusecase.transaction.Transaction;
 import org.jusecase.transaction.TransactionRunner;
 
@@ -22,14 +25,14 @@ public class RunAsTransactionAndRollback implements BeforeEachCallback, AfterEac
     }
 
     @Override
-    public void beforeEach(TestExtensionContext context) throws Exception {
+    public void beforeEach(ExtensionContext context) throws Exception {
         TransactionRunner transactionRunner = context.getStore(NAMESPACE).get("transactionRunner", TransactionRunner.class);
         Transaction transaction = transactionRunner.startTransaction();
         context.getStore(NAMESPACE).put("transaction", transaction);
     }
 
     @Override
-    public void afterEach(TestExtensionContext context) throws Exception {
+    public void afterEach(ExtensionContext context) throws Exception {
         Transaction transaction = context.getStore(NAMESPACE).remove("transaction", Transaction.class);
         transaction.rollback();
     }
